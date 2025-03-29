@@ -1,4 +1,23 @@
-<!DOCTYPE html>
+// スタートボタンのクリックイベントを直接追加
+document.addEventListener('DOMContentLoaded', function() {
+    const startButton = document.getElementById('start-button');
+    if (startButton) {
+        startButton.addEventListener('click', function() {
+            console.log('スタートボタンがクリックされました');
+            const instructionsElement = document.getElementById('instructions');
+            if (instructionsElement) {
+                instructionsElement.style.display = 'none';
+            }
+            
+            if (game && game.scene.scenes[0]) {
+                const currentScene = game.scene.scenes[0];
+                startGame.call(currentScene);
+            } else {
+                console.error('ゲームシーンが見つかりません');
+            }
+        });
+    }
+});<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -34,7 +53,7 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            z-index: 100;
+            z-index: 1000;
         }
         button {
             background-color: #e63946;
@@ -58,7 +77,7 @@
             <p>画面をタップ/クリックして鍋の料理を食べよう！</p>
             <p>でも、<span style="color: red;">鬼が現れたら</span>すぐに食べるのを止めて！</p>
             <p>制限時間内にどれだけ食べられるかな？</p>
-            <button id="start-button">スタート！</button>
+            <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px;">スタート！</button>
         </div>
     </div>
 
@@ -193,18 +212,10 @@ game = new Phaser.Game(config);
             oniSound = { play: function() {} };
             backgroundMusic = { play: function() {}, stop: function() {} };
             
-            // 開始指示の表示
+            // 開始指示の表示 - DOMContentLoadedイベントで処理するため削除
             const instructionsElement = document.getElementById('instructions');
             if (instructionsElement) {
                 instructionsElement.style.display = 'block';
-                const startButton = document.getElementById('start-button');
-                if (startButton) {
-                    startButton.addEventListener('click', startGame.bind(this));
-                } else {
-                    console.error('スタートボタンが見つかりません');
-                }
-            } else {
-                console.error('instructions要素が見つかりません');
             }
         }
         
