@@ -60,6 +60,71 @@
             pointer-events: auto;
         }
         
+        #title-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000; /* タイトル画面は最前面 */
+            text-align: center;
+        }
+        
+        #title-container {
+            transform: translateY(-100vh); /* 初期位置（画面外） */
+            transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 上から降りてくるアニメーション */
+            background-color: rgba(230, 57, 70, 0.8);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+        }
+        
+        #title-screen.show #title-container {
+            transform: translateY(0); /* 中央に表示 */
+        }
+        
+        #title-screen h1 {
+            font-size: 8vmin;
+            margin-bottom: 1vh;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+            color: #FFFFFF;
+        }
+        
+        #title-screen p {
+            font-size: 3vmin;
+            margin-bottom: 3vh;
+            color: #FFFFFF;
+        }
+        
+        #start-game-button {
+            background-color: #FFD700;
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 4vmin;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        #start-game-button:hover {
+            transform: scale(1.05);
+            background-color: #FFC107;
+        }
+        
+        #start-game-button:active {
+            transform: scale(0.95);
+        }
+        
         #eat-button {
             position: fixed;
             bottom: 20px;
@@ -106,7 +171,14 @@
 </head>
 <body>
     <div id="game-container">
-        <div id="instructions">
+        <div id="title-screen">
+            <div id="title-container">
+                <h1>横浜中華街・鬼鍋チャレンジ</h1>
+                <p>中華街の鍋を食べて完食を目指せ！でも鬼が出たら食べるのをやめろ！</p>
+                <button id="start-game-button">ゲームスタート</button>
+            </div>
+        </div>
+        <div id="instructions" style="display: none;">
             <h2>横浜中華街・鬼鍋チャレンジ</h2>
             <p>「食べる！」ボタンをタップして鍋の料理を食べよう！</p>
             <p>でも、<span style="color: red;">鬼が現れたら</span>すぐに食べるのを止めて！</p>
@@ -870,7 +942,16 @@
                 eatButton.style.display = 'none';
             }
             
-            document.getElementById('instructions').style.display = 'block';
+            // タイトル画面に戻る
+            const titleScreen = document.getElementById('title-screen');
+            if (titleScreen) {
+                titleScreen.style.display = 'flex';
+                
+                // アニメーションのために少し遅延を入れる
+                setTimeout(() => {
+                    titleScreen.classList.add('show');
+                }, 100);
+            }
         }
         
         // ハイスコア保存
@@ -932,6 +1013,33 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOMContentLoaded イベントが発生しました');
             
+            // タイトル画面の表示
+            const titleScreen = document.getElementById('title-screen');
+            if (titleScreen) {
+                // アニメーションのために少し遅延を入れる
+                setTimeout(() => {
+                    titleScreen.classList.add('show');
+                }, 100);
+            }
+            
+            // タイトル画面のスタートボタン
+            const startGameButton = document.getElementById('start-game-button');
+            if (startGameButton) {
+                startGameButton.addEventListener('click', function(event) {
+                    // タイトル画面を非表示
+                    if (titleScreen) {
+                        titleScreen.style.display = 'none';
+                    }
+                    
+                    // 説明画面を表示
+                    const instructionsElement = document.getElementById('instructions');
+                    if (instructionsElement) {
+                        instructionsElement.style.display = 'block';
+                    }
+                });
+            }
+            
+            // 説明画面のスタートボタン
             const startButton = document.getElementById('start-button');
             if (startButton) {
                 console.log('スタートボタンが見つかりました');
