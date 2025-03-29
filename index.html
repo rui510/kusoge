@@ -180,11 +180,11 @@
             hotpot.setInteractive();
             
             // 鬼 - 画面中央上部に配置
-            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.6);
+            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.4); // サイズを小さく
             oni.visible = false;
             
             // 鍋を食べるキャラクター - 鍋の右側に配置
-            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.5);
+            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.3); // サイズを小さく
             character.visible = true;
             character.depth = 0; // キャラクターの深度を設定（値を小さくして他の要素の後ろに）
             
@@ -284,9 +284,16 @@
         }
         
         function eatFood() {
+            console.log('eatFood関数が呼ばれました。oniVisible:', oniVisible, 'clickEnabled:', clickEnabled);
+            
             if (oniVisible) {
                 // 鬼が見ているときに食べてしまった！
                 endGame(true);
+                return;
+            }
+            
+            if (!clickEnabled) {
+                console.log('clickEnabledがfalseのため、食べることができません');
                 return;
             }
             
@@ -299,7 +306,7 @@
             
             // 食べた量に応じてスコアを加算
             score += 10;
-            scoreText.setText('スコア: ' + score);
+            if (scoreText) scoreText.setText('スコア: ' + score);
             
             // 鍋の中の料理を更新
             updateFood();
@@ -357,8 +364,15 @@
         function scheduleOniAppearance() {
             if (!gameStarted || gameOver) return; // ゲームが開始していない場合は何もしない
             
+            // 前の鬼タイマーをクリア
+            if (oniTimer) {
+                clearTimeout(oniTimer);
+            }
+            
             // 鬼の出現までの時間をランダムに設定（2〜5秒）
             const delay = Phaser.Math.Between(2000, 5000);
+            
+            console.log(`${delay}ミリ秒後に鬼を表示します`);
             
             oniTimer = setTimeout(() => {
                 if (!gameStarted || gameOver) return; // ゲームがまだ開始していない場合は何もしない
@@ -366,6 +380,8 @@
                 
                 // 鬼の表示時間（1〜2秒）
                 const oniDuration = Phaser.Math.Between(1000, 2000);
+                console.log(`${oniDuration}ミリ秒後に鬼を隠します`);
+                
                 setTimeout(hideOni, oniDuration);
             }, delay);
         }
@@ -376,6 +392,8 @@
             oni.visible = true;
             oniVisible = true;
             clickEnabled = false;
+            
+            console.log('鬼を表示しました。clickEnabled:', clickEnabled);
             
             // キャラクターが驚く表現（少し震える）
             if (character && gameStarted && !gameOver) {
@@ -396,6 +414,8 @@
             oni.visible = false;
             oniVisible = false;
             clickEnabled = true;
+            
+            console.log('鬼を隠しました。clickEnabled:', clickEnabled);
             
             if (gameStarted && !gameOver) {
                 scheduleOniAppearance();
