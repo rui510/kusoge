@@ -561,18 +561,18 @@
                 // まず少しだけ顔を出す
                 currentScene.tweens.add({
                     targets: oni,
-                    x: wall.x - 10, // 壁から少し顔を出す
-                    duration: 300,
+                    x: wall.x - 20, // 壁から少し顔を出す
+                    duration: 500,
                     ease: 'Power1',
                     onComplete: function() {
                         // 少し待ってから、もう少し顔を出す
                         currentScene.tweens.add({
                             targets: oni,
                             x: wall.x + 5, // さらに顔を出す
-                            duration: 200,
+                            duration: 400,
                             ease: 'Power1',
                             yoyo: true, // 少し引っ込める
-                            hold: 200, // 少し待つ
+                            hold: 400, // 少し待つ
                             onComplete: function() {
                                 console.log('鬼がひょこり顔を出しました！食べることができます');
                                 
