@@ -36,7 +36,7 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            z-index: 2000; /* 数値を増やしてより前面に表示 */
+            z-index: 3000; /* 数値を増やして最前面に表示 */
             pointer-events: auto; /* クリックイベントを確実に受け取る */
         }
         #eat-button {
@@ -80,7 +80,7 @@
             <p>「食べる！」ボタンをタップして鍋の料理を食べよう！</p>
             <p>でも、<span style="color: red;">鬼が現れたら</span>すぐに食べるのを止めて！</p>
             <p>制限時間内にどれだけ食べられるかな？</p>
-            <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px; position: relative; z-index: 2001;">スタート！</button>
+            <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px; position: relative; z-index: 3001;">スタート！</button>
         </div>
         <button id="eat-button">食べる！</button>
     </div>
@@ -566,28 +566,52 @@
 
         // スタートボタンのクリックイベントを直接追加
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded イベントが発生しました');
+            
             const startButton = document.getElementById('start-button');
             if (startButton) {
-                startButton.addEventListener('click', function() {
+                console.log('スタートボタンが見つかりました');
+                
+                // すべてのイベントリスナーを削除して新しく追加
+                const newStartButton = startButton.cloneNode(true);
+                startButton.parentNode.replaceChild(newStartButton, startButton);
+                
+                newStartButton.addEventListener('click', function(event) {
                     console.log('スタートボタンがクリックされました');
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
                     const instructionsElement = document.getElementById('instructions');
                     if (instructionsElement) {
                         instructionsElement.style.display = 'none';
                     }
                     
                     startGame();
+                    return false;
                 });
+            } else {
+                console.error('スタートボタンが見つかりません');
             }
             
             // 食べるボタンのイベントを追加
             const eatButton = document.getElementById('eat-button');
             if (eatButton) {
-                eatButton.addEventListener('click', function() {
+                // すべてのイベントリスナーを削除して新しく追加
+                const newEatButton = eatButton.cloneNode(true);
+                eatButton.parentNode.replaceChild(newEatButton, eatButton);
+                
+                newEatButton.addEventListener('click', function(event) {
                     console.log('食べるボタンがクリックされました gameStarted:', gameStarted, 'gameOver:', gameOver, 'clickEnabled:', clickEnabled);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
                     if (gameStarted && !gameOver) {
                         eatFood();
                     }
+                    return false;
                 });
+            } else {
+                console.error('食べるボタンが見つかりません');
             }
         });
     </script>
