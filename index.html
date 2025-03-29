@@ -1,23 +1,4 @@
-// スタートボタンのクリックイベントを直接追加
-document.addEventListener('DOMContentLoaded', function() {
-    const startButton = document.getElementById('start-button');
-    if (startButton) {
-        startButton.addEventListener('click', function() {
-            console.log('スタートボタンがクリックされました');
-            const instructionsElement = document.getElementById('instructions');
-            if (instructionsElement) {
-                instructionsElement.style.display = 'none';
-            }
-            
-            if (game && game.scene.scenes[0]) {
-                const currentScene = game.scene.scenes[0];
-                startGame.call(currentScene);
-            } else {
-                console.error('ゲームシーンが見つかりません');
-            }
-        });
-    }
-});<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -83,6 +64,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
     <script>
+        // ゲーム変数
+        let game;
+        let hotpot;
+        let food;
+        let foodAmount = 100;
+        let score = 0;
+        let scoreText;
+        let timeText;
+        let timeLeft = 30;
+        let gameStarted = false;
+        let gameOver = false;
+        let oni;
+        let oniVisible = false;
+        let oniTimer;
+        let clickEnabled = true;
+        let gameOverText;
+        let resultText;
+        let restartButton;
+        let clickSound;
+        let oniSound;
+        let backgroundMusic;
+        let character; // 鍋を食べるキャラクター
+        let currentScene;
+
         // ゲーム設定
         const config = {
             type: Phaser.AUTO,
@@ -107,50 +112,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-// ゲームの初期化
-game = new Phaser.Game(config);
-
-        // ゲーム変数
-        let game = new Phaser.Game(config);
-        let hotpot;
-        let food;
-        let foodAmount = 100;
-        let score = 0;
-        let scoreText;
-        let timeText;
-        let timeLeft = 30;
-        let gameStarted = false;
-        let gameOver = false;
-        let oni;
-        let oniVisible = false;
-        let oniTimer;
-        let clickEnabled = true;
-        let gameOverText;
-        let resultText;
-        let restartButton;
-        let clickSound;
-        let oniSound;
-        let backgroundMusic;
+        // ゲームの初期化
+        game = new Phaser.Game(config);
 
         function preload() {
-            // 画像のロード
-            this.load.image('background', 'https://i.imgur.com/JY5LVPG.jpg'); // 中華街背景
-            this.load.image('hotpot', 'https://i.imgur.com/8hQYGGD.png'); // 鍋画像
-            this.load.image('food', 'https://i.imgur.com/YnHYoXn.png'); // 料理画像
-            this.load.image('oni', 'https://i.imgur.com/8f9yYEF.png'); // 鬼画像
+            currentScene = this;
+            // 画像のロード - imagesフォルダから読み込むように変更
+            this.load.image('background', 'images/background.jpg'); // 中華街背景
+            this.load.image('hotpot', 'images/hotpot.png'); // 鍋画像
+            this.load.image('food', 'images/food.png'); // 料理画像
+            this.load.image('oni', 'images/oni.png'); // 鬼画像
+            this.load.image('character', 'images/character.png'); // 食べるキャラクター画像
             
             // 音声は使用しない
         }
 
-        // Canvasのパフォーマンス警告に対応するためのヘルパー関数
-function createGraphicsWithReadFrequency(scene) {
-  const graphics = scene.add.graphics();
-  // Canvas2DのwillReadFrequently属性を設定できればベスト
-  // ただし、PhaserではAPIが直接露出していないので警告は無視しても問題ない
-  return graphics;
-}
-
-function create() {
+        function create() {
+            currentScene = this;
+            
+            // ダミーの音声オブジェクト（エラー回避用）
+            clickSound = { play: function() {} };
+            oniSound = { play: function() {} };
+            backgroundMusic = { play: function() {}, stop: function() {} };
+            
             // 背景 - 画面サイズに合わせて調整
             const bgImage = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background');
             const scaleX = this.cameras.main.width / bgImage.width;
@@ -158,12 +142,16 @@ function create() {
             const scale = Math.max(scaleX, scaleY);
             bgImage.setScale(scale).setScrollFactor(0);
             
-            // 料理（食べ物）のグラフィックスを初期化
-            food = createGraphicsWithReadFrequency(this);
+            // 料理のグラフィックス
+            food = this.add.graphics();
             
             // 鍋 - 画面中央下部に配置
             hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.8);
             hotpot.setInteractive();
+            
+            // 鬼 - 画面中央上部に配置
+            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.6);
+            oni.visible = false;
             
             // 鍋を食べるキャラクター - 鍋の右側に配置
             character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.5);
@@ -171,13 +159,6 @@ function create() {
             
             // キャラクターのアニメーション状態
             character.isEating = false;
-            
-            // 料理の初期状態を更新
-            updateFood();
-            
-            // 鬼 - 画面中央上部に配置
-            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.6);
-            oni.visible = false;
             
             // スコアと時間のテキスト - レスポンシブに調整
             const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
@@ -206,27 +187,26 @@ function create() {
                 { fontSize: buttonFontSize, fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
             restartButton.setOrigin(0.5);
             restartButton.setInteractive({ useHandCursor: true });
-            restartButton.on('pointerdown', restartGame);
+            restartButton.on('pointerdown', function() {
+                restartGame();
+            });
             restartButton.visible = false;
             
             // クリック処理
             hotpot.on('pointerdown', function() {
                 if (gameStarted && !gameOver && clickEnabled) {
                     eatFood();
-                    clickSound.play();
                 }
             });
             
-            // 音声なしバージョンのためのダミー設定
-            clickSound = { play: function() {} };
-            oniSound = { play: function() {} };
-            backgroundMusic = { play: function() {}, stop: function() {} };
-            
-            // 開始指示の表示 - DOMContentLoadedイベントで処理するため削除
+            // 開始指示の表示
             const instructionsElement = document.getElementById('instructions');
             if (instructionsElement) {
                 instructionsElement.style.display = 'block';
             }
+            
+            // 料理の初期状態を更新
+            updateFood();
         }
         
         function update() {
@@ -239,20 +219,30 @@ function create() {
         }
         
         function startGame() {
-            document.getElementById('instructions').style.display = 'none';
+            console.log('ゲーム開始関数が呼ばれました');
+            const instructionsElement = document.getElementById('instructions');
+            if (instructionsElement) {
+                instructionsElement.style.display = 'none';
+            }
+            
+            if (gameStarted) return; // すでに開始している場合は何もしない
+            
             gameStarted = true;
-            // 音声なしバージョンなのでBGM再生は省略
             
             // タイマーの開始
-            this.time.addEvent({
-                delay: 1000,
-                callback: updateTimer,
-                callbackScope: this,
-                loop: true
-            });
-            
-            // 鬼の出現タイマー
-            scheduleOniAppearance();
+            if (currentScene && currentScene.time) {
+                currentScene.time.addEvent({
+                    delay: 1000,
+                    callback: updateTimer,
+                    callbackScope: currentScene,
+                    loop: true
+                });
+                
+                // 鬼の出現タイマー
+                scheduleOniAppearance();
+            } else {
+                console.error('シーンのタイマーが利用できません');
+            }
         }
         
         function updateTimer() {
@@ -269,6 +259,9 @@ function create() {
                 return;
             }
             
+            // キャラクターの食べるアニメーション
+            animateCharacterEating();
+            
             // 料理を食べる
             foodAmount -= 5;
             if (foodAmount < 0) foodAmount = 0;
@@ -281,17 +274,63 @@ function create() {
             updateFood();
         }
         
+        // キャラクターの食べるアニメーション
+        function animateCharacterEating() {
+            if (!character || character.isEating) return; // 未初期化またはすでにアニメーション中なら何もしない
+            
+            character.isEating = true;
+            
+            // 少し前に動かす
+            const originalX = character.x;
+            const originalY = character.y;
+            
+            // アニメーション
+            game.tweens.add({
+                targets: character,
+                x: hotpot.x + 20, // 鍋に近づく
+                y: hotpot.y - 20, // 少し上に動く
+                duration: 150,
+                ease: 'Power1',
+                onComplete: function() {
+                    // 元の位置に戻す
+                    game.tweens.add({
+                        targets: character,
+                        x: originalX,
+                        y: originalY,
+                        duration: 150,
+                        ease: 'Power1',
+                        onComplete: function() {
+                            character.isEating = false;
+                        }
+                    });
+                }
+            });
+        }
+        
         function updateFood() {
+            if (!food || !hotpot) return; // 初期化前の場合は処理しない
+            
+            const gameWidth = game.config.width;
+            const foodWidth = foodAmount * (gameWidth / 400); // 画面幅に合わせてスケーリング
+            
             food.clear();
             food.fillStyle(0xFF6B6B, 1);
-            food.fillRect(300, 380, foodAmount * 2, 40);
+            food.fillRect(
+                (gameWidth - foodWidth) / 2,
+                hotpot.y - 20,
+                foodWidth,
+                40
+            );
         }
         
         function scheduleOniAppearance() {
+            if (!gameStarted || gameOver) return; // ゲームが開始していない場合は何もしない
+            
             // 鬼の出現までの時間をランダムに設定（2〜5秒）
             const delay = Phaser.Math.Between(2000, 5000);
             
             oniTimer = setTimeout(() => {
+                if (!gameStarted || gameOver) return; // ゲームがまだ開始していない場合は何もしない
                 showOni();
                 
                 // 鬼の表示時間（1〜2秒）
@@ -301,13 +340,28 @@ function create() {
         }
         
         function showOni() {
+            if (!oni || !gameStarted || gameOver) return; // 初期化前またはゲーム外の場合は何もしない
+            
             oni.visible = true;
             oniVisible = true;
             clickEnabled = false;
-            oniSound.play();
+            
+            // キャラクターが驚く表現（少し震える）
+            if (character && gameStarted && !gameOver) {
+                game.tweens.add({
+                    targets: character,
+                    x: character.x - 5,
+                    y: character.y - 5,
+                    duration: 50,
+                    yoyo: true,
+                    repeat: 3
+                });
+            }
         }
         
         function hideOni() {
+            if (!oni) return;
+            
             oni.visible = false;
             oniVisible = false;
             clickEnabled = true;
@@ -320,14 +374,38 @@ function create() {
         function endGame(caughtByOni = false) {
             gameOver = true;
             clearTimeout(oniTimer);
-            backgroundMusic.stop();
+            
+            if (!gameOverText || !resultText || !restartButton) return;
             
             gameOverText.visible = true;
             
             if (caughtByOni) {
                 resultText.setText('鬼に見つかった！ 最終スコア: ' + score);
+                
+                // キャラクターが怯える動き
+                if (character) {
+                    game.tweens.add({
+                        targets: character,
+                        y: character.y + 20,
+                        angle: 15,
+                        duration: 500,
+                        ease: 'Bounce'
+                    });
+                }
             } else if (foodAmount <= 0) {
                 resultText.setText('完食達成！ 最終スコア: ' + score);
+                
+                // キャラクターが喜ぶ動き
+                if (character) {
+                    game.tweens.add({
+                        targets: character,
+                        y: character.y - 20,
+                        duration: 300,
+                        yoyo: true,
+                        repeat: 2,
+                        ease: 'Sine.easeOut'
+                    });
+                }
             } else {
                 resultText.setText('時間切れ！ 最終スコア: ' + score);
             }
@@ -344,18 +422,41 @@ function create() {
             timeLeft = 30;
             oniVisible = false;
             
-            scoreText.setText('スコア: 0');
-            timeText.setText('残り時間: 30');
+            if (scoreText) scoreText.setText('スコア: 0');
+            if (timeText) timeText.setText('残り時間: 30');
             
-            updateFood();
-            oni.visible = false;
+            if (food && hotpot) updateFood();
+            if (oni) oni.visible = false;
             
-            gameOverText.visible = false;
-            resultText.visible = false;
-            restartButton.visible = false;
+            // キャラクターを元の位置と状態に戻す
+            if (character) {
+                character.angle = 0;
+                character.y = game.config.height * 0.75;
+                character.isEating = false;
+            }
+            
+            if (gameOverText) gameOverText.visible = false;
+            if (resultText) resultText.visible = false;
+            if (restartButton) restartButton.visible = false;
             
             document.getElementById('instructions').style.display = 'block';
         }
+
+        // スタートボタンのクリックイベントを直接追加
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('start-button');
+            if (startButton) {
+                startButton.addEventListener('click', function() {
+                    console.log('スタートボタンがクリックされました');
+                    const instructionsElement = document.getElementById('instructions');
+                    if (instructionsElement) {
+                        instructionsElement.style.display = 'none';
+                    }
+                    
+                    startGame();
+                });
+            }
+        });
     </script>
 </body>
 </html>
