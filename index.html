@@ -39,6 +39,25 @@
             z-index: 2000; /* 数値を増やしてより前面に表示 */
             pointer-events: auto; /* クリックイベントを確実に受け取る */
         }
+        #eat-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #e63946;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 3000; /* 最前面に表示 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        #eat-button:active {
+            transform: translateX(-50%) scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
         button {
             background-color: #e63946;
             color: white;
@@ -58,11 +77,12 @@
     <div id="game-container">
         <div id="instructions">
             <h2>横浜中華街・鬼鍋チャレンジ</h2>
-            <p>画面をタップ/クリックして鍋の料理を食べよう！</p>
+            <p>「食べる！」ボタンをタップして鍋の料理を食べよう！</p>
             <p>でも、<span style="color: red;">鬼が現れたら</span>すぐに食べるのを止めて！</p>
             <p>制限時間内にどれだけ食べられるかな？</p>
             <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px; position: relative; z-index: 2001;">スタート！</button>
         </div>
+        <button id="eat-button" style="display: none;">食べる！</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
@@ -127,7 +147,7 @@
             // 画像のロード（背景と料理画像は使用しない）
             this.load.image('hotpot', 'images/hotpot.png'); // 鍋画像
             this.load.image('oni', 'images/oni.png'); // 鬼画像
-            this.load.image('character', 'images/character.png'); // 外部URL（テスト用）
+            this.load.image('character', 'https://i.imgur.com/NTi2Iiu.png'); // 外部URL（テスト用）
             
             // 画像の読み込み結果をチェック
             this.load.on('complete', function() {
@@ -386,6 +406,12 @@
             gameOver = true;
             clearTimeout(oniTimer);
             
+            // 食べるボタンを非表示
+            const eatButton = document.getElementById('eat-button');
+            if (eatButton) {
+                eatButton.style.display = 'none';
+            }
+            
             if (!gameOverText || !resultText || !restartButton) return;
             
             gameOverText.visible = true;
@@ -450,6 +476,12 @@
             if (resultText) resultText.visible = false;
             if (restartButton) restartButton.visible = false;
             
+            // 食べるボタンを非表示
+            const eatButton = document.getElementById('eat-button');
+            if (eatButton) {
+                eatButton.style.display = 'none';
+            }
+            
             document.getElementById('instructions').style.display = 'block';
         }
 
@@ -465,6 +497,16 @@
                     }
                     
                     startGame();
+                });
+            }
+            
+            // 食べるボタンのイベントを追加
+            const eatButton = document.getElementById('eat-button');
+            if (eatButton) {
+                eatButton.addEventListener('click', function() {
+                    if (gameStarted && !gameOver && clickEnabled) {
+                        eatFood();
+                    }
                 });
             }
         });
