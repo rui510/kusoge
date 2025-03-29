@@ -319,7 +319,8 @@
             gameStarted = true;
             lastTimerTick = 0; // タイマーをリセット
             
-            // 鬼の出現タイマー
+            console.log('鬼の出現タイマーを開始します');
+            // 鬼の出現タイマーを明示的に開始
             scheduleOniAppearance();
         }
         
@@ -490,7 +491,10 @@
         }
         
         function showOni() {
-            if (!oni || !gameStarted || gameOver) return; // 初期化前またはゲーム外の場合は何もしない
+            if (!oni || !gameStarted || gameOver) {
+                console.log('鬼を表示できませんでした。oni存在:', !!oni, 'gameStarted:', gameStarted, 'gameOver:', gameOver);
+                return; // 初期化前またはゲーム外の場合は何もしない
+            }
             
             oni.visible = true;
             oniVisible = true;
@@ -521,6 +525,7 @@
             console.log('鬼を隠しました。clickEnabled:', clickEnabled);
             
             if (gameStarted && !gameOver) {
+                // 明示的に次の鬼の出現をスケジュール
                 scheduleOniAppearance();
             }
         }
