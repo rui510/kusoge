@@ -191,7 +191,58 @@
             // 料理のグラフィックス（キャラより後に作成して上に表示）
             food = this.add.graphics();
             food.depth = 5; // キャラクターより上に表示
+            
+            // スコアと時間のテキスト - レスポンシブに調整
+            const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
+            scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
+            
+            const timeTextWidth = this.cameras.main.width * 0.4;
+            timeText = this.add.text(this.cameras.main.width - timeTextWidth, 16, '残り時間: 30', 
+                { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
+            
+            // 結果テキスト - レスポンシブに調整
+            const gameOverFontSize = Math.min(64, Math.max(32, this.cameras.main.width * 0.1)) + 'px';
+            gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.4, 'ゲームオーバー！', 
+                { fontSize: gameOverFontSize, fill: '#FFF', fontFamily: 'Arial', stroke: '#000', strokeThickness: 6 });
+            gameOverText.setOrigin(0.5);
+            gameOverText.visible = false;
+            gameOverText.depth = 100; // 最前面に表示
+            
+            const resultFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
+            resultText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.55, '', 
+                { fontSize: resultFontSize, fill: '#FFF', fontFamily: 'Arial', stroke: '#000', strokeThickness: 4 });
+            resultText.setOrigin(0.5);
+            resultText.visible = false;
+            resultText.depth = 100; // 最前面に表示
+            
+            // リスタートボタン - レスポンシブに調整
+            const buttonFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
+            restartButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.7, 'もう一度挑戦する', 
+                { fontSize: buttonFontSize, fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
+            restartButton.setOrigin(0.5);
+            restartButton.setInteractive({ useHandCursor: true });
+            restartButton.on('pointerdown', function() {
+                console.log('リスタートボタンがクリックされました');
+                restartGame();
+            });
+            restartButton.visible = false;
+            restartButton.depth = 100; // 最前面に表示
+            
+            // クリック処理
+            hotpot.on('pointerdown', function() {
+                if (gameStarted && !gameOver && clickEnabled) {
+                    eatFood();
+                }
+            });
+            
+            // 開始指示の表示
+            const instructionsElement = document.getElementById('instructions');
+            if (instructionsElement) {
+                instructionsElement.style.display = 'block';
+            }
+            
             updateFood();
+        }
             
             // スコアと時間のテキスト - レスポンシブに調整
             const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
@@ -426,6 +477,7 @@
         }
         
         function endGame(caughtByOni = false) {
+            console.log('endGame関数が呼ばれました。caughtByOni:', caughtByOni);
             gameOver = true;
             clearTimeout(oniTimer);
             
@@ -435,7 +487,10 @@
                 eatButton.style.display = 'none';
             }
             
-            if (!gameOverText || !resultText || !restartButton) return;
+            if (!gameOverText || !resultText || !restartButton) {
+                console.error('ゲームオーバー関連の要素が見つかりません');
+                return;
+            }
             
             gameOverText.visible = true;
             
@@ -472,6 +527,7 @@
             
             resultText.visible = true;
             restartButton.visible = true;
+            console.log('ゲームオーバー画面を表示しました');
         }
         
         function restartGame() {
@@ -527,7 +583,8 @@
             const eatButton = document.getElementById('eat-button');
             if (eatButton) {
                 eatButton.addEventListener('click', function() {
-                    if (gameStarted && !gameOver && clickEnabled) {
+                    console.log('食べるボタンがクリックされました gameStarted:', gameStarted, 'gameOver:', gameOver, 'clickEnabled:', clickEnabled);
+                    if (gameStarted && !gameOver) {
                         eatFood();
                     }
                 });
