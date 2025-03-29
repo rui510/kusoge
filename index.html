@@ -117,12 +117,12 @@
 
         function preload() {
             currentScene = this;
-            // 画像のロード - imagesフォルダから読み込むように変更
+            // 画像のロード - 絶対パスとファイル名を明示的に指定
             this.load.image('background', 'images/background.jpg'); // 中華街背景
             this.load.image('hotpot', 'images/hotpot.png'); // 鍋画像
             this.load.image('food', 'images/food.png'); // 料理画像
             this.load.image('oni', 'images/oni.png'); // 鬼画像
-            this.load.image('character', 'images/character.png'); // 食べるキャラクター画像
+            this.load.image('character', './images/character.png'); // 食べるキャラクター画像（./を追加）
             
             // 音声は使用しない
         }
