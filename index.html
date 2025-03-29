@@ -82,7 +82,7 @@
             <p>制限時間内にどれだけ食べられるかな？</p>
             <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px; position: relative; z-index: 2001;">スタート！</button>
         </div>
-        <button id="eat-button" style="display: none;">食べる！</button>
+        <button id="eat-button">食べる！</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
@@ -147,7 +147,7 @@
             // 画像のロード（背景と料理画像は使用しない）
             this.load.image('hotpot', 'images/hotpot.png'); // 鍋画像
             this.load.image('oni', 'images/oni.png'); // 鬼画像
-            this.load.image('character', 'images/character.png'); // 外部URL（テスト用）
+            this.load.image('character', 'images/character.png'); // キャラクター画像
             
             // 画像の読み込み結果をチェック
             this.load.on('complete', function() {
