@@ -275,12 +275,29 @@
             updateFood();
         }
         
-        function update() {
+        // 絶対時間を使用したタイマー実装
+        let lastTimerTick = 0;
+        const ONE_SECOND = 1000; // 1秒 = 1000ミリ秒
+        
+        function update(time) {
             if (!gameStarted || gameOver) return;
             
             // ゲーム終了チェック
             if (timeLeft <= 0 || foodAmount <= 0) {
                 endGame();
+                return;
+            }
+            
+            // 厳密に1秒ごとにタイマーを更新
+            if (lastTimerTick === 0) {
+                lastTimerTick = time;
+            } else if (time - lastTimerTick >= ONE_SECOND) {
+                // 1秒以上経過した場合にのみカウントダウン
+                timeLeft--;
+                if (timeText) {
+                    timeText.setText('残り時間: ' + timeLeft);
+                }
+                lastTimerTick = time; // 次の計測のために時間を更新
             }
         }
         
@@ -303,42 +320,14 @@
             if (gameStarted) return; // すでに開始している場合は何もしない
             
             gameStarted = true;
+            lastTimerTick = 0; // タイマーをリセット
             
-            // 前回の時間を記録する変数
-            let lastUpdateTime = Date.now();
-            
-            // タイマーの開始（より正確に1秒ごとに減少するように修正）
-            if (currentScene && currentScene.time) {
-                currentScene.time.addEvent({
-                    delay: 100, // より細かく更新（100ミリ秒ごと）
-                    callback: function() {
-                        // 現在時刻を取得
-                        const currentTime = Date.now();
-                        // 前回の更新から経過した時間（秒）
-                        const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
-                        
-                        // 1秒以上経過していたら更新
-                        if (elapsedSeconds >= 1) {
-                            updateTimer();
-                            lastUpdateTime = currentTime;
-                        }
-                    },
-                    callbackScope: currentScene,
-                    loop: true
-                });
-                
-                // 鬼の出現タイマー
-                scheduleOniAppearance();
-            } else {
-                console.error('シーンのタイマーが利用できません');
-            }
+            // 鬼の出現タイマー
+            scheduleOniAppearance();
         }
         
         function updateTimer() {
-            if (gameStarted && !gameOver) {
-                timeLeft--;
-                timeText.setText('残り時間: ' + timeLeft);
-            }
+            // この関数は不要になりました - update関数でタイマー処理を行います
         }
         
         function eatFood() {
@@ -422,19 +411,59 @@
             if (!hotpot) return; // 初期化前の場合は処理しない
             
             const gameWidth = game.config.width;
-            const foodWidth = foodAmount * (gameWidth / 400); // 画面幅に合わせてスケーリング
+            const maxFoodWidth = gameWidth * 0.7; // 画面幅の70%をゲージの最大幅に設定
+            const foodWidth = (foodAmount / 100) * maxFoodWidth; // 残量に応じてスケーリング
             
             // 料理は直接描画（画像を使用しない）
             if (food) {
                 food.clear();
-                food.fillStyle(0xFF6B6B, 1); // 赤みがかった色
-                // キャラクターの上に表示されるように位置を調整
+                
+                // ゲージの背景（灰色）
+                food.fillStyle(0xCCCCCC, 0.5);
                 food.fillRect(
-                    (gameWidth - foodWidth) / 2,
-                    hotpot.y - 30, // 少し上に
-                    foodWidth,
-                    30 // 高さを少し小さく
+                    (gameWidth - maxFoodWidth) / 2,
+                    50, // 画面上部に表示
+                    maxFoodWidth,
+                    30
                 );
+                
+                // 残り料理ゲージ（赤）- 右から左へ減少
+                food.fillStyle(0xFF4444, 1);
+                food.fillRect(
+                    (gameWidth - maxFoodWidth) / 2,
+                    50,
+                    foodWidth,
+                    30
+                );
+                
+                // ゲージの枠線
+                food.lineStyle(2, 0x000000, 1);
+                food.strokeRect(
+                    (gameWidth - maxFoodWidth) / 2,
+                    50,
+                    maxFoodWidth,
+                    30
+                );
+                
+                // テキストラベル
+                if (!currentScene.foodText) {
+                    currentScene.foodText = currentScene.add.text(
+                        gameWidth / 2,
+                        35,
+                        "残り鍋: 100%",
+                        { 
+                            fontSize: '18px',
+                            fontFamily: 'Arial',
+                            color: '#FFFFFF',
+                            stroke: '#000000',
+                            strokeThickness: 3
+                        }
+                    );
+                    currentScene.foodText.setOrigin(0.5, 0);
+                }
+                
+                // テキストを更新
+                currentScene.foodText.setText(`残り鍋: ${foodAmount}%`);
             }
         }
         
