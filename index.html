@@ -36,7 +36,7 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            z-index: 3000; /* 数値を増やして最前面に表示 */
+            z-index: 2000; /* 数値を増やしてより前面に表示 */
             pointer-events: auto; /* クリックイベントを確実に受け取る */
         }
         #eat-button {
@@ -80,7 +80,7 @@
             <p>「食べる！」ボタンをタップして鍋の料理を食べよう！</p>
             <p>でも、<span style="color: red;">鬼が現れたら</span>すぐに食べるのを止めて！</p>
             <p>制限時間内にどれだけ食べられるかな？</p>
-            <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px; position: relative; z-index: 3001;">スタート！</button>
+            <button id="start-button" style="cursor: pointer; background-color: #e63946; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; margin-top: 15px; position: relative; z-index: 2001;">スタート！</button>
         </div>
         <button id="eat-button">食べる！</button>
     </div>
@@ -172,77 +172,24 @@
             // 背景を単色に設定
             this.cameras.main.setBackgroundColor('#87CEFA'); // 水色の背景
             
+            // 料理のグラフィックス
+            food = this.add.graphics();
+            
             // 鍋 - 画面中央下部に配置
             hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.8);
             hotpot.setInteractive();
             
             // 鬼 - 画面中央上部に配置
-            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.2); // サイズをさらに小さく
+            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.4); // サイズを小さく
             oni.visible = false;
             
             // 鍋を食べるキャラクター - 鍋の右側に配置
-            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.3);
+            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.3); // サイズを小さく
             character.visible = true;
             character.depth = 0; // キャラクターの深度を設定（値を小さくして他の要素の後ろに）
             
             // キャラクターのアニメーション状態
             character.isEating = false;
-            
-            // 料理のグラフィックス（キャラより後に作成して上に表示）
-            food = this.add.graphics();
-            food.depth = 5; // キャラクターより上に表示
-            
-            // スコアと時間のテキスト - レスポンシブに調整
-            const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
-            
-            const timeTextWidth = this.cameras.main.width * 0.4;
-            timeText = this.add.text(this.cameras.main.width - timeTextWidth, 16, '残り時間: 30', 
-                { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
-            
-            // 結果テキスト - レスポンシブに調整
-            const gameOverFontSize = Math.min(64, Math.max(32, this.cameras.main.width * 0.1)) + 'px';
-            gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.4, 'ゲームオーバー！', 
-                { fontSize: gameOverFontSize, fill: '#FFF', fontFamily: 'Arial', stroke: '#000', strokeThickness: 6 });
-            gameOverText.setOrigin(0.5);
-            gameOverText.visible = false;
-            gameOverText.depth = 100; // 最前面に表示
-            
-            const resultFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            resultText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.55, '', 
-                { fontSize: resultFontSize, fill: '#FFF', fontFamily: 'Arial', stroke: '#000', strokeThickness: 4 });
-            resultText.setOrigin(0.5);
-            resultText.visible = false;
-            resultText.depth = 100; // 最前面に表示
-            
-            // リスタートボタン - レスポンシブに調整
-            const buttonFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            restartButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.7, 'もう一度挑戦する', 
-                { fontSize: buttonFontSize, fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
-            restartButton.setOrigin(0.5);
-            restartButton.setInteractive({ useHandCursor: true });
-            restartButton.on('pointerdown', function() {
-                console.log('リスタートボタンがクリックされました');
-                restartGame();
-            });
-            restartButton.visible = false;
-            restartButton.depth = 100; // 最前面に表示
-            
-            // クリック処理
-            hotpot.on('pointerdown', function() {
-                if (gameStarted && !gameOver && clickEnabled) {
-                    eatFood();
-                }
-            });
-            
-            // 開始指示の表示
-            const instructionsElement = document.getElementById('instructions');
-            if (instructionsElement) {
-                instructionsElement.style.display = 'block';
-            }
-            
-            updateFood();
-        }
             
             // スコアと時間のテキスト - レスポンシブに調整
             const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
@@ -477,7 +424,6 @@
         }
         
         function endGame(caughtByOni = false) {
-            console.log('endGame関数が呼ばれました。caughtByOni:', caughtByOni);
             gameOver = true;
             clearTimeout(oniTimer);
             
@@ -487,10 +433,7 @@
                 eatButton.style.display = 'none';
             }
             
-            if (!gameOverText || !resultText || !restartButton) {
-                console.error('ゲームオーバー関連の要素が見つかりません');
-                return;
-            }
+            if (!gameOverText || !resultText || !restartButton) return;
             
             gameOverText.visible = true;
             
@@ -527,7 +470,6 @@
             
             resultText.visible = true;
             restartButton.visible = true;
-            console.log('ゲームオーバー画面を表示しました');
         }
         
         function restartGame() {
@@ -566,52 +508,27 @@
 
         // スタートボタンのクリックイベントを直接追加
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOMContentLoaded イベントが発生しました');
-            
             const startButton = document.getElementById('start-button');
             if (startButton) {
-                console.log('スタートボタンが見つかりました');
-                
-                // すべてのイベントリスナーを削除して新しく追加
-                const newStartButton = startButton.cloneNode(true);
-                startButton.parentNode.replaceChild(newStartButton, startButton);
-                
-                newStartButton.addEventListener('click', function(event) {
+                startButton.addEventListener('click', function() {
                     console.log('スタートボタンがクリックされました');
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
                     const instructionsElement = document.getElementById('instructions');
                     if (instructionsElement) {
                         instructionsElement.style.display = 'none';
                     }
                     
                     startGame();
-                    return false;
                 });
-            } else {
-                console.error('スタートボタンが見つかりません');
             }
             
             // 食べるボタンのイベントを追加
             const eatButton = document.getElementById('eat-button');
             if (eatButton) {
-                // すべてのイベントリスナーを削除して新しく追加
-                const newEatButton = eatButton.cloneNode(true);
-                eatButton.parentNode.replaceChild(newEatButton, eatButton);
-                
-                newEatButton.addEventListener('click', function(event) {
-                    console.log('食べるボタンがクリックされました gameStarted:', gameStarted, 'gameOver:', gameOver, 'clickEnabled:', clickEnabled);
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
-                    if (gameStarted && !gameOver) {
+                eatButton.addEventListener('click', function() {
+                    if (gameStarted && !gameOver && clickEnabled) {
                         eatFood();
                     }
-                    return false;
                 });
-            } else {
-                console.error('食べるボタンが見つかりません');
             }
         });
     </script>
