@@ -553,8 +553,10 @@
             // 鬼を壁の端に配置（ひょこり表示）
             oni.x = wall.x - 15;
             oni.visible = true;
+            oniVisible = false; // まだ判定はOFF
+            clickEnabled = true; // ひょこり中は食べられる
             
-            console.log('鬼がひょこり顔を出しました！');
+            console.log('鬼がひょこり顔を出しました！食べることができます');
             
             // キャラクターが驚く表現（軽く）
             if (character && gameStarted && !gameOver && currentScene && currentScene.tweens) {
@@ -568,18 +570,32 @@
             }
             
             // 1秒後に50%の確率で鬼が出現
+            clearTimeout(oniPeekTimer); // 既存のタイマーをクリア
+            
             oniPeekTimer = setTimeout(() => {
                 // ゲームが終了していたら何もしない
                 if (!gameStarted || gameOver) return;
                 
                 // 50%の確率で鬼が出現
-                if (Math.random() < 0.5) {
-                    showOni(); // 鬼が出現
-                    console.log('鬼が現れました！');
+                const willAppear = Math.random() < 0.5;
+                console.log('鬼が出るかどうかの判定:', willAppear);
+                
+                if (willAppear) {
+                    oni.x = wall.x + 30; // 壁の横に移動
+                    oniVisible = true; // 判定ON
+                    clickEnabled = false; // 食べられない
+                    console.log('鬼が現れました！食べると失敗します');
+                    
+                    // 1〜2秒後に鬼を隠す
+                    const hideDelay = Phaser.Math.Between(1000, 2000);
+                    setTimeout(() => {
+                        hideOni();
+                    }, hideDelay);
+                    
                 } else {
-                    hideOni(); // 鬼が引っ込む
+                    // 出なかった場合
+                    hideOni();
                     console.log('鬼は出てきませんでした...');
-                    scheduleOniAppearance(); // 次の鬼の出現をスケジュール
                 }
             }, 1000);
         }
@@ -591,7 +607,7 @@
                 return; // 初期化前またはゲーム外の場合は何もしない
             }
             
-            // 鬼を壁の横に移動
+            // 直接表示（ひょこりなし）の場合
             oni.x = wall.x + 30;
             oni.visible = true;
             oniVisible = true;
