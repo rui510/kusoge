@@ -13,11 +13,15 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
         }
         #game-container {
             position: relative;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            height: 100%;
         }
         #instructions {
             position: absolute;
@@ -63,8 +67,8 @@
         // ゲーム設定
         const config = {
             type: Phaser.AUTO,
-            width: window.innerWidth > 800 ? 800 : window.innerWidth,
-            height: window.innerHeight > 600 ? 600 : window.innerHeight,
+            width: window.innerWidth,
+            height: window.innerHeight,
             parent: 'game-container',
             scene: {
                 preload: preload,
@@ -77,6 +81,10 @@
                     gravity: { y: 0 },
                     debug: false
                 }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
             }
         };
 
@@ -113,36 +121,50 @@
         }
 
         function create() {
-            // 背景
-            this.add.image(400, 300, 'background').setScale(2);
+            // 背景 - 画面サイズに合わせて調整
+            const bgImage = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background');
+            const scaleX = this.cameras.main.width / bgImage.width;
+            const scaleY = this.cameras.main.height / bgImage.height;
+            const scale = Math.max(scaleX, scaleY);
+            bgImage.setScale(scale).setScrollFactor(0);
             
-            // 鍋
-            hotpot = this.add.image(400, 400, 'hotpot').setScale(0.8);
+            // 鍋 - 画面中央下部に配置
+            hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.8);
             hotpot.setInteractive();
             
             // 料理
             food = this.add.graphics();
             updateFood();
             
-            // 鬼
-            oni = this.add.image(400, 200, 'oni').setScale(0.6);
+            // 鬼 - 画面中央上部に配置
+            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.6);
             oni.visible = false;
             
-            // スコアと時間のテキスト
-            scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: '32px', fill: '#FFF', fontFamily: 'Arial' });
-            timeText = this.add.text(600, 16, '残り時間: 30', { fontSize: '32px', fill: '#FFF', fontFamily: 'Arial' });
+            // スコアと時間のテキスト - レスポンシブに調整
+            const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
+            scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
             
-            // 結果テキスト
-            gameOverText = this.add.text(400, 250, 'ゲームオーバー！', { fontSize: '64px', fill: '#FFF', fontFamily: 'Arial' });
+            const timeTextWidth = this.cameras.main.width * 0.4;
+            timeText = this.add.text(this.cameras.main.width - timeTextWidth, 16, '残り時間: 30', 
+                { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
+            
+            // 結果テキスト - レスポンシブに調整
+            const gameOverFontSize = Math.min(64, Math.max(32, this.cameras.main.width * 0.1)) + 'px';
+            gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.4, 'ゲームオーバー！', 
+                { fontSize: gameOverFontSize, fill: '#FFF', fontFamily: 'Arial' });
             gameOverText.setOrigin(0.5);
             gameOverText.visible = false;
             
-            resultText = this.add.text(400, 350, '', { fontSize: '32px', fill: '#FFF', fontFamily: 'Arial' });
+            const resultFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
+            resultText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.55, '', 
+                { fontSize: resultFontSize, fill: '#FFF', fontFamily: 'Arial' });
             resultText.setOrigin(0.5);
             resultText.visible = false;
             
-            // リスタートボタン
-            restartButton = this.add.text(400, 450, 'もう一度挑戦する', { fontSize: '32px', fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
+            // リスタートボタン - レスポンシブに調整
+            const buttonFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
+            restartButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.7, 'もう一度挑戦する', 
+                { fontSize: buttonFontSize, fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
             restartButton.setOrigin(0.5);
             restartButton.setInteractive({ useHandCursor: true });
             restartButton.on('pointerdown', restartGame);
