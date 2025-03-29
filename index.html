@@ -88,6 +88,9 @@
             }
         };
 
+// ゲームの初期化
+game = new Phaser.Game(config);
+
         // ゲーム変数
         let game = new Phaser.Game(config);
         let hotpot;
@@ -131,6 +134,13 @@
             // 鍋 - 画面中央下部に配置
             hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.8);
             hotpot.setInteractive();
+            
+            // 鍋を食べるキャラクター - 鍋の右側に配置
+            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.5);
+            character.visible = true;
+            
+            // キャラクターのアニメーション状態
+            character.isEating = false;
             
             // 料理
             food = this.add.graphics();
