@@ -139,8 +139,12 @@
         let clickSound;
         let oniSound;
         let backgroundMusic;
-        let character; // 鍋を食べるキャラクター
+        let character;
         let currentScene;
+        
+        // タイマー変数
+        let lastTimerTick = 0;
+        const ONE_SECOND = 1000; // 1秒 = 1000ミリ秒
 
         // ゲーム設定
         const config = {
@@ -169,29 +173,31 @@
         // ゲームの初期化
         game = new Phaser.Game(config);
 
+        // アセットのプリロード
         function preload() {
             currentScene = this;
             
             // デバッグ情報を表示
             console.log('画像の読み込みを開始します');
             
-            // 画像のロード（背景と料理画像は使用しない）
-            this.load.image('hotpot', 'images/nabe.png'); // 鍋画像を新しいファイル名に変更
+            // 画像のロード
+            this.load.image('hotpot', 'images/nabe.png'); // 鍋画像
             this.load.image('oni', 'images/oni.png'); // 鬼画像
             this.load.image('character', 'images/character.png'); // キャラクター画像
             
             // 画像の読み込み結果をチェック
             this.load.on('complete', function() {
                 console.log('すべての画像が読み込まれました');
-            });
+        </script>
+</body>
+</html>
             
             this.load.on('loaderror', function(fileObj) {
                 console.error('画像の読み込みに失敗しました:', fileObj.key, fileObj.src);
             });
-            
-            // 音声は使用しない
         }
 
+        // ゲーム画面の作成
         function create() {
             currentScene = this;
             
@@ -203,50 +209,92 @@
             // 背景を単色に設定
             this.cameras.main.setBackgroundColor('#87CEFA'); // 水色の背景
             
+            // 料理のグラフィックス
+            food = this.add.graphics();
+            food.depth = 15; // 鍋より上に表示
+            
+            // 鬼 - 画面中央上部に配置
+            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.2);
+            oni.visible = false;
+            
             // 鍋を食べるキャラクター - 鍋の右側に配置
-            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.24); // 0.3の0.8倍 = 0.24
+            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.24);
             character.visible = true;
-            character.depth = 0; // キャラクターの深度を設定（値を小さくして他の要素の後ろに）
+            character.depth = 0; // キャラクターを最背面に
             
             // キャラクターのアニメーション状態
             character.isEating = false;
             
-            // 鍋 - 画面中央下部に配置 - キャラクターの後に作成して上に表示
-            hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.4); // サイズを半分に
+            // 鍋 - 画面中央下部に配置
+            hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.4);
             hotpot.setInteractive();
-            hotpot.depth = 10; // キャラクターより上に表示
+            hotpot.depth = 10; // キャラクターの上に表示
             
-            // 料理のグラフィックス（キャラより後に作成して上に表示）
-            food = this.add.graphics();
-            food.depth = 5; // キャラクターより上に表示
-            
-            // スコアと時間のテキスト - レスポンシブに調整
+            // スコアと時間のテキスト
             const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
+            scoreText = this.add.text(16, 16, 'スコア: 0', { 
+                fontSize: fontSize, 
+                fill: '#FFF', 
+                fontFamily: 'Arial',
+                stroke: '#000',
+                strokeThickness: 3
+            });
             
             const timeTextWidth = this.cameras.main.width * 0.4;
-            timeText = this.add.text(this.cameras.main.width - timeTextWidth, 16, '残り時間: 30', 
-                { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
+            timeText = this.add.text(this.cameras.main.width - timeTextWidth, 16, '残り時間: 30', { 
+                fontSize: fontSize, 
+                fill: '#FFF', 
+                fontFamily: 'Arial',
+                stroke: '#000',
+                strokeThickness: 3
+            });
             
-            // 結果テキスト - レスポンシブに調整
+            // ハイスコア表示（画面の左下に配置）
+            const highScoreInfo = getHighScoreDisplayText();
+            const highScoreText = this.add.text(16, this.cameras.main.height - 80, highScoreInfo, { 
+                fontSize: '14px', 
+                fill: '#FFF', 
+                fontFamily: 'Arial', 
+                stroke: '#000', 
+                strokeThickness: 2 
+            });
+            highScoreText.setOrigin(0, 1);
+            
+            // 結果テキスト
             const gameOverFontSize = Math.min(64, Math.max(32, this.cameras.main.width * 0.1)) + 'px';
-            gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.4, 'ゲームオーバー！', 
-                { fontSize: gameOverFontSize, fill: '#FFF', fontFamily: 'Arial', stroke: '#000', strokeThickness: 6 });
+            gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.4, 'ゲームオーバー！', { 
+                fontSize: gameOverFontSize, 
+                fill: '#FFF', 
+                fontFamily: 'Arial', 
+                stroke: '#000', 
+                strokeThickness: 6 
+            });
             gameOverText.setOrigin(0.5);
             gameOverText.visible = false;
             gameOverText.depth = 100; // 最前面に表示
             
             const resultFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            resultText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.55, '', 
-                { fontSize: resultFontSize, fill: '#FFF', fontFamily: 'Arial', stroke: '#000', strokeThickness: 4 });
+            resultText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.55, '', { 
+                fontSize: resultFontSize, 
+                fill: '#FFF', 
+                fontFamily: 'Arial', 
+                stroke: '#000', 
+                strokeThickness: 4, 
+                align: 'center' 
+            });
             resultText.setOrigin(0.5);
             resultText.visible = false;
             resultText.depth = 100; // 最前面に表示
             
-            // リスタートボタン - レスポンシブに調整
+            // リスタートボタン
             const buttonFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            restartButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.7, 'もう一度挑戦する', 
-                { fontSize: buttonFontSize, fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
+            restartButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.7, 'もう一度挑戦する', { 
+                fontSize: buttonFontSize, 
+                fill: '#FFF', 
+                fontFamily: 'Arial', 
+                backgroundColor: '#e63946', 
+                padding: { x: 10, y: 5 } 
+            });
             restartButton.setOrigin(0.5);
             restartButton.setInteractive({ useHandCursor: true });
             restartButton.on('pointerdown', function() {
@@ -269,13 +317,11 @@
                 instructionsElement.style.display = 'block';
             }
             
+            // 初期化
             updateFood();
         }
-        
-        // 絶対時間を使用したタイマー実装
-        let lastTimerTick = 0;
-        const ONE_SECOND = 1000; // 1秒 = 1000ミリ秒
-        
+
+        // メインアップデートループ
         function update(time) {
             if (!gameStarted || gameOver) return;
             
@@ -298,6 +344,7 @@
             }
         }
         
+        // ゲーム開始
         function startGame() {
             console.log('ゲーム開始関数が呼ばれました');
             const instructionsElement = document.getElementById('instructions');
@@ -324,10 +371,7 @@
             scheduleOniAppearance();
         }
         
-        function updateTimer() {
-            // この関数は不要になりました - update関数でタイマー処理を行います
-        }
-        
+        // 食べる処理
         function eatFood() {
             console.log('eatFood関数が呼ばれました。oniVisible:', oniVisible, 'clickEnabled:', clickEnabled);
             
@@ -405,6 +449,7 @@
             }
         }
         
+        // 料理ゲージの更新
         function updateFood() {
             if (!hotpot) return; // 初期化前の場合は処理しない
             
@@ -465,6 +510,7 @@
             }
         }
         
+        // 鬼の出現スケジュール
         function scheduleOniAppearance() {
             if (!gameStarted || gameOver) return; // ゲームが開始していない場合は何もしない
             
@@ -490,6 +536,7 @@
             }, delay);
         }
         
+        // 鬼の表示
         function showOni() {
             if (!oni || !gameStarted || gameOver) {
                 console.log('鬼を表示できませんでした。oni存在:', !!oni, 'gameStarted:', gameStarted, 'gameOver:', gameOver);
@@ -515,6 +562,7 @@
             }
         }
         
+        // 鬼を隠す
         function hideOni() {
             if (!oni) return;
             
@@ -530,6 +578,7 @@
             }
         }
         
+        // ゲーム終了
         function endGame(caughtByOni = false) {
             console.log('endGame関数が呼ばれました。caughtByOni:', caughtByOni);
             gameOver = true;
@@ -599,45 +648,7 @@
             console.log('ゲームオーバー画面を表示しました');
         }
         
-        // ハイスコア保存関数
-        function saveHighScore(newScore, completionTime) {
-            // 現在のハイスコアを取得
-            const currentHighScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
-            const currentBestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
-            
-            console.log('現在のハイスコア:', currentHighScore, '新スコア:', newScore);
-            console.log('現在の最速時間:', currentBestTime, '今回の時間:', completionTime);
-            
-            // スコアが高ければ更新
-            if (newScore > currentHighScore) {
-                localStorage.setItem('koinabe_highScore', newScore.toString());
-                console.log('新しいハイスコアを記録:', newScore);
-            }
-            
-            // 完食時間が速ければ更新（小さい値が良い）
-            if (completionTime < currentBestTime) {
-                localStorage.setItem('koinabe_bestTime', completionTime.toString());
-                console.log('新しい最速記録を更新:', completionTime);
-            }
-        }
-        
-        // ハイスコア情報取得関数
-        function getHighScoreInfo() {
-            const highScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
-            const bestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
-            
-            let message = '【ハイスコア】\n';
-            message += `最高得点: ${highScore}点\n`;
-            
-            if (bestTime < 999) {
-                message += `最速完食時間: ${bestTime}秒`;
-            } else {
-                message += '最速完食時間: まだ記録なし';
-            }
-            
-            return message;
-        }
-        
+        // ゲームリスタート
         function restartGame() {
             gameStarted = false;
             gameOver = false;
@@ -671,8 +682,63 @@
             
             document.getElementById('instructions').style.display = 'block';
         }
+        
+        // ハイスコア保存
+        function saveHighScore(newScore, completionTime) {
+            // 現在のハイスコアを取得
+            const currentHighScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
+            const currentBestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
+            
+            console.log('現在のハイスコア:', currentHighScore, '新スコア:', newScore);
+            console.log('現在の最速時間:', currentBestTime, '今回の時間:', completionTime);
+            
+            // スコアが高ければ更新
+            if (newScore > currentHighScore) {
+                localStorage.setItem('koinabe_highScore', newScore.toString());
+                console.log('新しいハイスコアを記録:', newScore);
+            }
+            
+            // 完食時間が速ければ更新（小さい値が良い）
+            if (completionTime < currentBestTime) {
+                localStorage.setItem('koinabe_bestTime', completionTime.toString());
+                console.log('新しい最速記録を更新:', completionTime);
+            }
+        }
+        
+        // リザルト画面用ハイスコア情報
+        function getHighScoreInfo() {
+            const highScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
+            const bestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
+            
+            let message = '【ハイスコア】\n';
+            message += `最高得点: ${highScore}点\n`;
+            
+            if (bestTime < 999) {
+                message += `最速完食時間: ${bestTime}秒`;
+            } else {
+                message += '最速完食時間: まだ記録なし';
+            }
+            
+            return message;
+        }
+        
+        // ゲーム画面用ハイスコア表示
+        function getHighScoreDisplayText() {
+            const highScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
+            const bestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
+            
+            let displayText = 'ハイスコア: ' + highScore + '点\n';
+            
+            if (bestTime < 999) {
+                displayText += '最速時間: ' + bestTime + '秒';
+            } else {
+                displayText += '最速時間: --';
+            }
+            
+            return displayText;
+        }
 
-        // スタートボタンのクリックイベントを直接追加
+        // スタートボタンのクリックイベント
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOMContentLoaded イベントが発生しました');
             
@@ -722,6 +788,3 @@
                 console.error('食べるボタンが見つかりません');
             }
         });
-    </script>
-</body>
-</html>
