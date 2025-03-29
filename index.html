@@ -515,23 +515,10 @@
                 return;
             }
             
-            gameOverText.visible = true;
-            
-            if (caughtByOni) {
-                resultText.setText('鬼に見つかった！ 最終スコア: ' + score);
-                
-                // キャラクターが怯える動き
-                if (character && currentScene && currentScene.tweens) {
-                    currentScene.tweens.add({
-                        targets: character,
-                        y: character.y + 20,
-                        angle: 15,
-                        duration: 500,
-                        ease: 'Bounce'
-                    });
-                }
-            } else if (foodAmount <= 0) {
-                resultText.setText('完食達成！ 最終スコア: ' + score);
+            if (foodAmount <= 0) {
+                // 完食達成の場合は「完食！」と表示
+                gameOverText.setText('完食！');
+                resultText.setText('おめでとう！ 最終スコア: ' + score);
                 
                 // キャラクターが喜ぶ動き
                 if (character && currentScene && currentScene.tweens) {
@@ -544,10 +531,28 @@
                         ease: 'Sine.easeOut'
                     });
                 }
+            } else if (caughtByOni) {
+                // 鬼に見つかった場合
+                gameOverText.setText('ゲームオーバー！');
+                resultText.setText('鬼に見つかった！ 最終スコア: ' + score);
+                
+                // キャラクターが怯える動き
+                if (character && currentScene && currentScene.tweens) {
+                    currentScene.tweens.add({
+                        targets: character,
+                        y: character.y + 20,
+                        angle: 15,
+                        duration: 500,
+                        ease: 'Bounce'
+                    });
+                }
             } else {
-                resultText.setText('時間切れ！ 最終スコア: ' + score);
+                // 時間切れの場合
+                gameOverText.setText('時間切れ！');
+                resultText.setText('最終スコア: ' + score);
             }
             
+            gameOverText.visible = true;
             resultText.visible = true;
             restartButton.visible = true;
             console.log('ゲームオーバー画面を表示しました');
