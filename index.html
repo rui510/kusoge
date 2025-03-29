@@ -17,6 +17,7 @@
             -ms-user-select: none;
             user-select: none;
         }
+        
         body {
             margin: 0;
             padding: 0;
@@ -28,39 +29,22 @@
             width: 100vw;
             overflow: hidden;
             font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
-            -webkit-touch-callout: none; /* iOSでの長押しによるコンテキストメニュー表示を防止 */
-            -webkit-user-select: none;   /* Safariでのテキスト選択を防止 */
-            -khtml-user-select: none;    /* 古いブラウザでのテキスト選択を防止 */
-            -moz-user-select: none;      /* Firefoxでのテキスト選択を防止 */
-            -ms-user-select: none;       /* IEでのテキスト選択を防止 */
-            user-select: none;           /* 標準のテキスト選択を防止 */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f8f8f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
-            -webkit-touch-callout: none; /* iOSでの長押しによるコンテキストメニュー表示を防止 */
-            -webkit-user-select: none;   /* Safariでのテキスト選択を防止 */
-            -khtml-user-select: none;    /* 古いブラウザでのテキスト選択を防止 */
-            -moz-user-select: none;      /* Firefoxでのテキスト選択を防止 */
-            -ms-user-select: none;       /* IEでのテキスト選択を防止 */
-            user-select: none;           /* 標準のテキスト選択を防止 */
-        }
+        
         #game-container {
             position: relative;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             width: 100%;
             height: 100%;
-            /* キャンバスの上にHTMLレイヤーが確実に表示されるようにする */
             isolation: isolate;
         }
+        
         #instructions {
             position: absolute;
             width: 80%;
@@ -72,9 +56,10 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            z-index: 3000; /* 数値を増やして最前面に表示 */
-            pointer-events: auto; /* クリックイベントを確実に受け取る */
+            z-index: 3000;
+            pointer-events: auto;
         }
+        
         #eat-button {
             position: fixed;
             bottom: 20px;
@@ -87,7 +72,7 @@
             border-radius: 50px;
             font-size: 20px;
             cursor: pointer;
-            z-index: 3000; /* 最前面に表示 */
+            z-index: 3000;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -95,12 +80,14 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* タップ時のハイライトを無効化 */
+            -webkit-tap-highlight-color: transparent;
         }
+        
         #eat-button:active {
             transform: translateX(-50%) scale(0.95);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
+        
         button {
             background-color: #e63946;
             color: white;
@@ -111,6 +98,7 @@
             cursor: pointer;
             margin-top: 15px;
         }
+        
         button:hover {
             background-color: #c1121f;
         }
@@ -286,55 +274,6 @@
             
             updateFood();
         }
-            
-            // スコアと時間のテキスト - レスポンシブに調整
-            const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
-            
-            const timeTextWidth = this.cameras.main.width * 0.4;
-            timeText = this.add.text(this.cameras.main.width - timeTextWidth, 16, '残り時間: 30', 
-                { fontSize: fontSize, fill: '#FFF', fontFamily: 'Arial' });
-            
-            // 結果テキスト - レスポンシブに調整
-            const gameOverFontSize = Math.min(64, Math.max(32, this.cameras.main.width * 0.1)) + 'px';
-            gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.4, 'ゲームオーバー！', 
-                { fontSize: gameOverFontSize, fill: '#FFF', fontFamily: 'Arial' });
-            gameOverText.setOrigin(0.5);
-            gameOverText.visible = false;
-            
-            const resultFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            resultText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.55, '', 
-                { fontSize: resultFontSize, fill: '#FFF', fontFamily: 'Arial' });
-            resultText.setOrigin(0.5);
-            resultText.visible = false;
-            
-            // リスタートボタン - レスポンシブに調整
-            const buttonFontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
-            restartButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height * 0.7, 'もう一度挑戦する', 
-                { fontSize: buttonFontSize, fill: '#FFF', fontFamily: 'Arial', backgroundColor: '#e63946', padding: { x: 10, y: 5 } });
-            restartButton.setOrigin(0.5);
-            restartButton.setInteractive({ useHandCursor: true });
-            restartButton.on('pointerdown', function() {
-                restartGame();
-            });
-            restartButton.visible = false;
-            
-            // クリック処理
-            hotpot.on('pointerdown', function() {
-                if (gameStarted && !gameOver && clickEnabled) {
-                    eatFood();
-                }
-            });
-            
-            // 開始指示の表示
-            const instructionsElement = document.getElementById('instructions');
-            if (instructionsElement) {
-                instructionsElement.style.display = 'block';
-            }
-            
-            // 料理の初期状態を更新
-            updateFood();
-        }
         
         function update() {
             if (!gameStarted || gameOver) return;
@@ -352,9 +291,19 @@
                 instructionsElement.style.display = 'none';
             }
             
+            // 食べるボタンを確実に表示
+            const eatButton = document.getElementById('eat-button');
+            if (eatButton) {
+                console.log('食べるボタンを表示します');
+                eatButton.style.display = 'block';
+            } else {
+                console.error('食べるボタンが見つかりません');
+            }
+            
             if (gameStarted) return; // すでに開始している場合は何もしない
             
             gameStarted = true;
+            // 音声なしバージョンなのでBGM再生は省略
             
             // タイマーの開始
             if (currentScene && currentScene.time) {
@@ -457,19 +406,23 @@
         }
         
         function updateFood() {
-            if (!food || !hotpot) return; // 初期化前の場合は処理しない
+            if (!hotpot) return; // 初期化前の場合は処理しない
             
             const gameWidth = game.config.width;
             const foodWidth = foodAmount * (gameWidth / 400); // 画面幅に合わせてスケーリング
             
-            food.clear();
-            food.fillStyle(0xFF6B6B, 1);
-            food.fillRect(
-                (gameWidth - foodWidth) / 2,
-                hotpot.y - 20,
-                foodWidth,
-                40
-            );
+            // 料理は直接描画（画像を使用しない）
+            if (food) {
+                food.clear();
+                food.fillStyle(0xFF6B6B, 1); // 赤みがかった色
+                // キャラクターの上に表示されるように位置を調整
+                food.fillRect(
+                    (gameWidth - foodWidth) / 2,
+                    hotpot.y - 30, // 少し上に
+                    foodWidth,
+                    30 // 高さを少し小さく
+                );
+            }
         }
         
         function scheduleOniAppearance() {
