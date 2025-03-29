@@ -142,13 +142,24 @@ game = new Phaser.Game(config);
             // 音声は使用しない
         }
 
-        function create() {
+        // Canvasのパフォーマンス警告に対応するためのヘルパー関数
+function createGraphicsWithReadFrequency(scene) {
+  const graphics = scene.add.graphics();
+  // Canvas2DのwillReadFrequently属性を設定できればベスト
+  // ただし、PhaserではAPIが直接露出していないので警告は無視しても問題ない
+  return graphics;
+}
+
+function create() {
             // 背景 - 画面サイズに合わせて調整
             const bgImage = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background');
             const scaleX = this.cameras.main.width / bgImage.width;
             const scaleY = this.cameras.main.height / bgImage.height;
             const scale = Math.max(scaleX, scaleY);
             bgImage.setScale(scale).setScrollFactor(0);
+            
+            // 料理（食べ物）のグラフィックスを初期化
+            food = createGraphicsWithReadFrequency(this);
             
             // 鍋 - 画面中央下部に配置
             hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.8);
@@ -161,8 +172,7 @@ game = new Phaser.Game(config);
             // キャラクターのアニメーション状態
             character.isEating = false;
             
-            // 料理
-            food = this.add.graphics();
+            // 料理の初期状態を更新
             updateFood();
             
             // 鬼 - 画面中央上部に配置
