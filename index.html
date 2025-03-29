@@ -541,10 +541,20 @@
                 return;
             }
             
+            // 完食達成の場合のみハイスコアを記録
             if (foodAmount <= 0) {
-                // 完食達成の場合は「完食！」と表示
+                // 完食した時間を計算（30秒 - 残り時間）
+                const completionTime = 30 - timeLeft;
+                
+                // ハイスコアを記録
+                saveHighScore(score, completionTime);
+                
+                // 「完食！」と表示
                 gameOverText.setText('完食！');
-                resultText.setText('おめでとう！ 最終スコア: ' + score);
+                
+                // ハイスコア情報を含めたメッセージ
+                const highScoreInfo = getHighScoreInfo();
+                resultText.setText(`おめでとう！ 最終スコア: ${score}\n完食時間: ${completionTime}秒\n\n${highScoreInfo}`);
                 
                 // キャラクターが喜ぶ動き
                 if (character && currentScene && currentScene.tweens) {
@@ -582,6 +592,45 @@
             resultText.visible = true;
             restartButton.visible = true;
             console.log('ゲームオーバー画面を表示しました');
+        }
+        
+        // ハイスコア保存関数
+        function saveHighScore(newScore, completionTime) {
+            // 現在のハイスコアを取得
+            const currentHighScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
+            const currentBestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
+            
+            console.log('現在のハイスコア:', currentHighScore, '新スコア:', newScore);
+            console.log('現在の最速時間:', currentBestTime, '今回の時間:', completionTime);
+            
+            // スコアが高ければ更新
+            if (newScore > currentHighScore) {
+                localStorage.setItem('koinabe_highScore', newScore.toString());
+                console.log('新しいハイスコアを記録:', newScore);
+            }
+            
+            // 完食時間が速ければ更新（小さい値が良い）
+            if (completionTime < currentBestTime) {
+                localStorage.setItem('koinabe_bestTime', completionTime.toString());
+                console.log('新しい最速記録を更新:', completionTime);
+            }
+        }
+        
+        // ハイスコア情報取得関数
+        function getHighScoreInfo() {
+            const highScore = parseInt(localStorage.getItem('koinabe_highScore') || '0');
+            const bestTime = parseInt(localStorage.getItem('koinabe_bestTime') || '999');
+            
+            let message = '【ハイスコア】\n';
+            message += `最高得点: ${highScore}点\n`;
+            
+            if (bestTime < 999) {
+                message += `最速完食時間: ${bestTime}秒`;
+            } else {
+                message += '最速完食時間: まだ記録なし';
+            }
+            
+            return message;
         }
         
         function restartGame() {
