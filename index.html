@@ -303,13 +303,26 @@
             if (gameStarted) return; // すでに開始している場合は何もしない
             
             gameStarted = true;
-            // 音声なしバージョンなのでBGM再生は省略
             
-            // タイマーの開始
+            // 前回の時間を記録する変数
+            let lastUpdateTime = Date.now();
+            
+            // タイマーの開始（より正確に1秒ごとに減少するように修正）
             if (currentScene && currentScene.time) {
                 currentScene.time.addEvent({
-                    delay: 1000,
-                    callback: updateTimer,
+                    delay: 100, // より細かく更新（100ミリ秒ごと）
+                    callback: function() {
+                        // 現在時刻を取得
+                        const currentTime = Date.now();
+                        // 前回の更新から経過した時間（秒）
+                        const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
+                        
+                        // 1秒以上経過していたら更新
+                        if (elapsedSeconds >= 1) {
+                            updateTimer();
+                            lastUpdateTime = currentTime;
+                        }
+                    },
                     callbackScope: currentScene,
                     loop: true
                 });
