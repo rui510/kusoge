@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>横浜中華街・鬼鍋チャレンジ</title>
     <style>
@@ -15,6 +16,24 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
+            -webkit-touch-callout: none; /* iOSでの長押しによるコンテキストメニュー表示を防止 */
+            -webkit-user-select: none;   /* Safariでのテキスト選択を防止 */
+            -khtml-user-select: none;    /* 古いブラウザでのテキスト選択を防止 */
+            -moz-user-select: none;      /* Firefoxでのテキスト選択を防止 */
+            -ms-user-select: none;       /* IEでのテキスト選択を防止 */
+            user-select: none;           /* 標準のテキスト選択を防止 */
         }
         body {
             margin: 0;
