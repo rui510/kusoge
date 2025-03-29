@@ -172,24 +172,26 @@
             // 背景を単色に設定
             this.cameras.main.setBackgroundColor('#87CEFA'); // 水色の背景
             
-            // 料理のグラフィックス
-            food = this.add.graphics();
-            
             // 鍋 - 画面中央下部に配置
             hotpot = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.75, 'hotpot').setScale(0.8);
             hotpot.setInteractive();
             
             // 鬼 - 画面中央上部に配置
-            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.4); // サイズを小さく
+            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.2); // サイズをさらに小さく
             oni.visible = false;
             
             // 鍋を食べるキャラクター - 鍋の右側に配置
-            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.3); // サイズを小さく
+            character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.3);
             character.visible = true;
             character.depth = 0; // キャラクターの深度を設定（値を小さくして他の要素の後ろに）
             
             // キャラクターのアニメーション状態
             character.isEating = false;
+            
+            // 料理のグラフィックス（キャラより後に作成して上に表示）
+            food = this.add.graphics();
+            food.depth = 5; // キャラクターより上に表示
+            updateFood();
             
             // スコアと時間のテキスト - レスポンシブに調整
             const fontSize = Math.min(32, Math.max(16, this.cameras.main.width * 0.05)) + 'px';
