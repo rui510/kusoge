@@ -184,6 +184,7 @@
             this.load.image('hotpot', 'images/nabe.png'); // 鍋画像
             this.load.image('oni', 'images/oni.png'); // 鬼画像
             this.load.image('character', 'images/character.png'); // キャラクター画像
+            this.load.image('wall', 'images/renga.png'); // 壁画像
             
             // 画像の読み込み結果をチェック
             this.load.on('complete', function() {
@@ -207,13 +208,18 @@
             // 背景を単色に設定
             this.cameras.main.setBackgroundColor('#87CEFA'); // 水色の背景
             
+            // 壁 - 画面左端に配置
+            wall = this.add.image(this.cameras.main.width * 0.15, this.cameras.main.height * 0.3, 'wall').setScale(0.4);
+            wall.depth = 5; // 壁の深度
+            
             // 料理のグラフィックス
             food = this.add.graphics();
             food.depth = 15; // 鍋より上に表示
             
-            // 鬼 - 画面中央上部に配置
-            oni = this.add.image(this.cameras.main.width / 2, this.cameras.main.height * 0.3, 'oni').setScale(0.2);
+            // 鬼 - 壁の後ろに隠れて配置（最初は見えない）
+            oni = this.add.image(wall.x - 30, wall.y, 'oni').setScale(0.2);
             oni.visible = false;
+            oni.depth = 4; // 壁より後ろ
             
             // 鍋を食べるキャラクター - 鍋の右側に配置
             character = this.add.image(this.cameras.main.width / 2 + 120, this.cameras.main.height * 0.75, 'character').setScale(0.24);
