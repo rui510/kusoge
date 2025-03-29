@@ -550,12 +550,15 @@
                 return;
             }
             
-            // 画面幅の計算
+            // 画面の中央あたりに鬼が出るように位置を調整
             const screenWidth = game.config.width;
-            const oneThirdPosition = screenWidth / 3;  // 画面の1/3の位置
-            const halfPosition = screenWidth / 2;      // 画面の1/2の位置
+            const centerPosition = screenWidth * 0.4; // 中央より少し左
+            const fullOutPosition = screenWidth * 0.55; // 中央より少し右
             
-            console.log('画面幅:', screenWidth, '1/3位置:', oneThirdPosition, '1/2位置:', halfPosition);
+            console.log('画面幅:', screenWidth, 'ひょっこり位置:', centerPosition, '完全出現位置:', fullOutPosition);
+            
+            // 鬼を鮮やかな赤色に着色して目立たせる（一時的に色を変える）
+            oni.setTint(0xFF3030);
             
             // 鬼を最初は壁の後ろに隠す
             oni.x = wall.x - 30;
@@ -565,20 +568,21 @@
             
             // ひょこりアニメーション
             if (currentScene && currentScene.tweens) {
-                // まず画面の1/3くらいまで顔を出す
+                // 勢いよく顔を出す
                 currentScene.tweens.add({
                     targets: oni,
-                    x: oneThirdPosition, // 画面の1/3まで出す
-                    duration: 400,
-                    ease: 'Power1',
+                    x: centerPosition, // 画面中央あたりまで出す
+                    duration: 300,
+                    ease: 'Back.easeOut',
                     onComplete: function() {
-                        // 少し待ってから、少し戻る
+                        // 少し揺れる動き
                         currentScene.tweens.add({
                             targets: oni,
-                            x: oneThirdPosition - 20, // 少し引っ込める
-                            duration: 200,
-                            ease: 'Power1',
-                            hold: 200, // 少し待つ
+                            angle: 5, // 少し傾ける
+                            y: oni.y - 10, // 少し上に動かす
+                            duration: 150,
+                            yoyo: true,
+                            repeat: 1,
                             onComplete: function() {
                                 console.log('鬼がひょこり顔を出しました！食べることができます');
                                 
@@ -586,14 +590,14 @@
                                 if (character && gameStarted && !gameOver) {
                                     currentScene.tweens.add({
                                         targets: character,
-                                        x: character.x - 2,
+                                        x: character.x - 4,
                                         duration: 50,
                                         yoyo: true,
-                                        repeat: 1
+                                        repeat: 3
                                     });
                                 }
                                 
-                                // 1秒後に50%の確率で鬼が出現
+                                // 1.5秒後に50%の確率で鬼が出現（長めに表示して確認できるように）
                                 clearTimeout(oniPeekTimer); // 既存のタイマーをクリア
                                 
                                 oniPeekTimer = setTimeout(() => {
@@ -605,13 +609,15 @@
                                     console.log('鬼が出るかどうかの判定:', willAppear);
                                     
                                     if (willAppear) {
-                                        // 鬼が勢いよく画面の1/2まで飛び出すアニメーション
+                                        // 鬼が勢いよく画面の中央まで飛び出すアニメーション
                                         currentScene.tweens.add({
                                             targets: oni,
-                                            x: halfPosition, // 画面の半分まで出てくる
+                                            x: fullOutPosition, // 画面中央を超えて出てくる
+                                            angle: 0, // 角度を戻す
                                             duration: 300,
-                                            ease: 'Back.easeOut',
+                                            ease: 'Power2.easeOut',
                                             onStart: function() {
+                                                oni.setTint(0xFF0000); // さらに赤くする
                                                 oniVisible = true; // 判定ON
                                                 clickEnabled = false; // 食べられない
                                             },
@@ -619,7 +625,7 @@
                                                 console.log('鬼が現れました！食べると失敗します');
                                                 
                                                 // 1〜2秒後に鬼を隠す
-                                                const hideDelay = Phaser.Math.Between(1000, 2000);
+                                                const hideDelay = Phaser.Math.Between(1500, 2500);
                                                 setTimeout(() => {
                                                     hideOni();
                                                 }, hideDelay);
@@ -630,6 +636,7 @@
                                         currentScene.tweens.add({
                                             targets: oni,
                                             x: wall.x - 30, // 壁の後ろへ
+                                            angle: 0, // 角度を戻す
                                             duration: 400,
                                             ease: 'Power2',
                                             onComplete: function() {
@@ -638,14 +645,14 @@
                                             }
                                         });
                                     }
-                                }, 800);
+                                }, 1500);
                             }
                         });
                     }
                 });
             } else {
                 // tweensが使えない場合は単純な表示
-                oni.x = oneThirdPosition;
+                oni.x = centerPosition;
                 console.log('鬼がひょこり顔を出しました！（アニメーションなし）');
                 
                 oniPeekTimer = setTimeout(() => {
@@ -653,17 +660,17 @@
                     
                     const willAppear = Math.random() < 0.5;
                     if (willAppear) {
-                        oni.x = halfPosition;
+                        oni.x = fullOutPosition;
                         oniVisible = true;
                         clickEnabled = false;
                         
                         setTimeout(() => {
                             hideOni();
-                        }, 1500);
+                        }, 2000);
                     } else {
                         hideOni();
                     }
-                }, 1000);
+                }, 1500);
             }
         }
         
@@ -712,12 +719,16 @@
                 currentScene.tweens.add({
                     targets: oni,
                     x: wall.x - 40, // 壁の後ろに完全に隠れる
+                    angle: 0,  // 角度をリセット
                     duration: 300,
                     ease: 'Power2',
                     onComplete: function() {
                         oni.visible = false;
                         oniVisible = false;
                         clickEnabled = true;
+                        
+                        // 色をリセット
+                        oni.clearTint();
                         
                         // ピークタイマーもクリア
                         if (oniPeekTimer) {
@@ -737,6 +748,7 @@
                 oni.visible = false;
                 oniVisible = false;
                 clickEnabled = true;
+                oni.clearTint(); // 色をリセット
                 
                 // ピークタイマーもクリア
                 if (oniPeekTimer) {
