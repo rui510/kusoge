@@ -550,6 +550,13 @@
                 return;
             }
             
+            // 画面幅の計算
+            const screenWidth = game.config.width;
+            const oneThirdPosition = screenWidth / 3;  // 画面の1/3の位置
+            const halfPosition = screenWidth / 2;      // 画面の1/2の位置
+            
+            console.log('画面幅:', screenWidth, '1/3位置:', oneThirdPosition, '1/2位置:', halfPosition);
+            
             // 鬼を最初は壁の後ろに隠す
             oni.x = wall.x - 30;
             oni.visible = true;
@@ -558,21 +565,20 @@
             
             // ひょこりアニメーション
             if (currentScene && currentScene.tweens) {
-                // まず少しだけ顔を出す
+                // まず画面の1/3くらいまで顔を出す
                 currentScene.tweens.add({
                     targets: oni,
-                    x: wall.x - 20, // 壁から少し顔を出す
-                    duration: 500,
+                    x: oneThirdPosition, // 画面の1/3まで出す
+                    duration: 400,
                     ease: 'Power1',
                     onComplete: function() {
-                        // 少し待ってから、もう少し顔を出す
+                        // 少し待ってから、少し戻る
                         currentScene.tweens.add({
                             targets: oni,
-                            x: wall.x + 5, // さらに顔を出す
-                            duration: 400,
+                            x: oneThirdPosition - 20, // 少し引っ込める
+                            duration: 200,
                             ease: 'Power1',
-                            yoyo: true, // 少し引っ込める
-                            hold: 400, // 少し待つ
+                            hold: 200, // 少し待つ
                             onComplete: function() {
                                 console.log('鬼がひょこり顔を出しました！食べることができます');
                                 
@@ -599,10 +605,10 @@
                                     console.log('鬼が出るかどうかの判定:', willAppear);
                                     
                                     if (willAppear) {
-                                        // 鬼が勢いよく飛び出すアニメーション
+                                        // 鬼が勢いよく画面の1/2まで飛び出すアニメーション
                                         currentScene.tweens.add({
                                             targets: oni,
-                                            x: wall.x + 40, // 大きく飛び出す
+                                            x: halfPosition, // 画面の半分まで出てくる
                                             duration: 300,
                                             ease: 'Back.easeOut',
                                             onStart: function() {
@@ -639,7 +645,7 @@
                 });
             } else {
                 // tweensが使えない場合は単純な表示
-                oni.x = wall.x - 15;
+                oni.x = oneThirdPosition;
                 console.log('鬼がひょこり顔を出しました！（アニメーションなし）');
                 
                 oniPeekTimer = setTimeout(() => {
@@ -647,7 +653,7 @@
                     
                     const willAppear = Math.random() < 0.5;
                     if (willAppear) {
-                        oni.x = wall.x + 30;
+                        oni.x = halfPosition;
                         oniVisible = true;
                         clickEnabled = false;
                         
